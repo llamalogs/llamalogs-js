@@ -1,0 +1,26 @@
+{
+  "name": "llamalogs",
+  "version": "0.1.0",
+  "description": "",
+  "homepage": "https://llamalogs.com",
+  "license" : "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/npm/cli.git"
+  }
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "parcel build src/index.ts --no-source-maps --target node"
+  },
+  "author": "",
+  "devDependencies": {
+    "@types/node": "^13.5.0",
+    "parcel-bundler": "^1.12.4",
+    "prettier": "^1.19.1",
+    "typescript": "^3.7.5"
+  },
+  "dependencies": {
+    "bent": "^7.1.0"
+  }
+}
