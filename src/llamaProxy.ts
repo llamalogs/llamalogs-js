@@ -33,7 +33,11 @@ export default class LlamaProxy {
 		
 		if (messageArr.length) {
 			const post = bent(url, 'POST', 'json', 200);
-			await post('api/timestats', {time_logs: messageArr})
+			try {
+				await post('api/timelogs', {time_logs: messageArr})
+			} catch (e) {
+				console.log('error contacting llama logs server')
+			}
 		}
 
 		const statList = []
@@ -52,7 +56,11 @@ export default class LlamaProxy {
 
 		if (statList.length) {
 			const post = bent(url, 'POST', 'json', 200);
-			await post('api/timestats', {time_stats: statList})
+			try {
+				await post('api/timestats', {time_stats: statList})
+			} catch (e) {
+				console.log('error contacting llama logs server')
+			}
 		}
 	}
 }
