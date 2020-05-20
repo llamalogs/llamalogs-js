@@ -5,13 +5,11 @@ const url = isDev ? 'http://localhost:4000/' : 'https://llamalogs.com/'
 
 export default class LlamaProxy {
     static async sendMessages(aggregateLogs, aggregateStats) {
-		const timestamp = Date.now()
-
 		// turning into array of aggregates
-		const messageArr = []
+		const logList = []
 		Object.keys(aggregateLogs).forEach(sender => {
 			Object.keys(aggregateLogs[sender]).forEach(receiver => {
-				messageArr.push({
+				logList.push({
 					sender, 
 					receiver,
 					count: aggregateLogs[sender][receiver].total,
@@ -28,15 +26,15 @@ export default class LlamaProxy {
 
 		if(isDev) {
 			console.log('messages')
-			console.log(messageArr)
+			console.log(logList)
 		}	
 		
-		if (messageArr.length) {
+		if (logList.length) {
 			const post = bent(url, 'POST', 'json', 200);
 			try {
-				await post('api/timelogs', {time_logs: messageArr})
+				await post('api/timelogs', {time_logs: logList})
 			} catch (e) {
-				console.log('error contacting llama logs server')
+				console.log(`LlamaLogs Error; contacting llama logs server; ${e}`)
 			}
 		}
 
@@ -59,7 +57,7 @@ export default class LlamaProxy {
 			try {
 				await post('api/timestats', {time_stats: statList})
 			} catch (e) {
-				console.log('error contacting llama logs server')
+				console.log(`LlamaLogs Error; contacting llama logs server; ${e}`)
 			}
 		}
 	}

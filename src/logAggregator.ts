@@ -1,4 +1,6 @@
 import LlamaProxy from './llamaProxy'
+import Log from './interfaces/log.interface'
+import Stat from './interfaces/stat.interface'
 
 let aggregateLogs = {}
 let aggregateStats = {}
@@ -11,10 +13,13 @@ export default class LogAggregator {
 		LogAggregator.setNewTimeout()
 	}
 	
+	// using a system of repeating timeouts so that process
+	// is not kept alive by a LlamaLogs interval
 	static addTime() {
 		if(timeoutClear) {
 			// if its time to resend, 5 sec added on end
-			if (lastSendTime < Date.now() - 24500) return
+			const defaultOneMinPoll = 54500
+			if (lastSendTime < Date.now() - defaultOneMinPoll) return
 			clearTimeout(timeoutClear)
 			LogAggregator.setNewTimeout()
 		} else {
@@ -38,8 +43,9 @@ export default class LogAggregator {
         await LlamaProxy.sendMessages(currentAggLogs, currentAggStats)
     }
 
-	static addStat(message) {
+	static addStat(message: Stat) {
 		LogAggregator.addTime()
+
 		if (message.type === "point") {
 			aggregateStats[message.component] = aggregateStats[message.component] || {}
 			aggregateStats[message.component][message.name] = message
@@ -54,11 +60,11 @@ export default class LogAggregator {
 		}
 	}
 
-	static addStatAvg(message) {		
+	static addStatAvg(message: Stat) {		
 		aggregateStats[message.component] = aggregateStats[message.component] || {}
 		if (!aggregateStats[message.component][message.name]) {
 			aggregateStats[message.component][message.name] = message
-			message.count = 0
+			message.count = 1
 			return
 		}
 		const existing = aggregateStats[message.component][message.name]
@@ -68,7 +74,7 @@ export default class LogAggregator {
 		existing.count = existing.count + 1
 	}
 
-	static addStatMax(message) {		
+	static addStatMax(message: Stat) {		
 		aggregateStats[message.component] = aggregateStats[message.component] || {}
 		if (!aggregateStats[message.component][message.name]) {
 			aggregateStats[message.component][message.name] = message
@@ -80,30 +86,16 @@ export default class LogAggregator {
 		existing.value = message.value
 	}
 
-	static addStatUniq() {
+	// static addStatUniq() {
 		// some sort of method to identify how many unique values have been sent in 
 		// with the component name
-	}
+	// }
 
-	static addMessage(message) {
+	static addMessage(message: Log) {
 		LogAggregator.addTime()
 		
-		const initObject = (sender, receiver) => {
-			return {
-				sender,
-				receiver,
-				account: message.account,
-				total: 0,
-				errors: 0,
-				elapsed: 0,
-				log: '',
-				errorLog: '',
-				initialMessageCount: 0,
-				graph: message.graph
-			}
-		}
 		aggregateLogs[message.sender] = aggregateLogs[message.sender] || {}
-		aggregateLogs[message.sender][message.receiver] = aggregateLogs[message.sender][message.receiver] || initObject(message.sender, message.receiver) 
+		aggregateLogs[message.sender][message.receiver] = aggregateLogs[message.sender][message.receiver] || LogAggregator.initAggregateObject(message) 
 		const aggObj = aggregateLogs[message.sender][message.receiver]
 
 		if (message.error) aggObj.errors++
@@ -120,4 +112,19 @@ export default class LogAggregator {
 		if (!aggObj.log && !message.error) aggObj.log = message.log.toString()
 		if (!aggObj.errorLog && message.error) aggObj.errorLog = message.log.toString()
 	}	
+
+	private static initAggregateObject(message: Log) {
+		return {
+			sender: message.sender,
+			receiver: message.receiver,
+			account: message.account,
+			total: 0,
+			errors: 0,
+			elapsed: 0,
+			log: '',
+			errorLog: '',
+			initialMessageCount: 0,
+			graph: message.graph
+		}
+	}
 }
