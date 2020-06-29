@@ -98,19 +98,20 @@ export default class LogAggregator {
 		aggregateLogs[message.sender][message.receiver] = aggregateLogs[message.sender][message.receiver] || LogAggregator.initAggregateObject(message) 
 		const aggObj = aggregateLogs[message.sender][message.receiver]
 
-		if (message.error) aggObj.errors++
+		if (message.isError) aggObj.errors++
 		// averaging in new elapsed time
 		if (message.elapsed) {
-			const prevAmount = aggObj.elapsed * aggObj.total
-			aggObj.elapsed = (prevAmount + message.elapsed) / (aggObj.total + 1)
+			const prevAmount = aggObj.elapsed * aggObj.elapsedCount
+			aggObj.elapsed = (prevAmount + message.elapsed) / (aggObj.elapsedCount + 1)
+			aggObj.elapsedCount = aggObj.elapsedCount + 1
 		}
 		if (message.initialMessage) {
 			aggObj.initialMessageCount++
 		}
 
 		aggObj.total++
-		if (!aggObj.log && !message.error) aggObj.log = message.log.toString()
-		if (!aggObj.errorLog && message.error) aggObj.errorLog = message.log.toString()
+		if (!aggObj.log && !message.isError) aggObj.message = message.message.toString()
+		if (!aggObj.errorLog && message.isError) aggObj.errorMessage = message.message.toString()
 	}	
 
 	private static initAggregateObject(message: Log) {
@@ -121,8 +122,9 @@ export default class LogAggregator {
 			total: 0,
 			errors: 0,
 			elapsed: 0,
-			log: '',
-			errorLog: '',
+			elapsedCount: 0,
+			message: '',
+			errorMessage: '',
 			initialMessageCount: 0,
 			graph: message.graph
 		}

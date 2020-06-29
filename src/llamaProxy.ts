@@ -14,8 +14,8 @@ export default class LlamaProxy {
 					receiver,
 					count: aggregateLogs[sender][receiver].total,
 					errorCount: aggregateLogs[sender][receiver].errors,
-					log: aggregateLogs[sender][receiver].log,
-					errorLog: aggregateLogs[sender][receiver].errorLog,
+					message: aggregateLogs[sender][receiver].message,
+					errorMessage: aggregateLogs[sender][receiver].errorMessage,
 					clientTimestamp: Date.now(),
 					graph: aggregateLogs[sender][receiver].graph || 'noGraph',
 					account: aggregateLogs[sender][receiver].account,
@@ -28,15 +28,6 @@ export default class LlamaProxy {
 			console.log('messages')
 			console.log(logList)
 		}	
-		
-		if (logList.length) {
-			const post = bent(url, 'POST', 'json', 200);
-			try {
-				await post('api/timelogs', {time_logs: logList})
-			} catch (e) {
-				console.log(`LlamaLogs Error; contacting llama logs server; ${e}`)
-			}
-		}
 
 		const statList = []
 		Object.keys(aggregateStats).forEach(component => {
@@ -52,10 +43,14 @@ export default class LlamaProxy {
 			console.log(statList)
 		}
 
-		if (statList.length) {
+		if (logList.length || statList.length) {
+			let account_key = ''
+			if (logList.length) account_key = logList[0].account
+			if (statList.length) account_key = statList[0].account
+
 			const post = bent(url, 'POST', 'json', 200);
 			try {
-				await post('api/timestats', {time_stats: statList})
+				await post('api/v0/timedata', {account_key, time_logs: logList, time_stats: statList})
 			} catch (e) {
 				console.log(`LlamaLogs Error; contacting llama logs server; ${e}`)
 			}

@@ -2,10 +2,10 @@ export default interface Log {
     sender: string
     receiver: string
     timestamp: number
-    log: string
+    message: string
     initialMessage: boolean
     account: string
     graph: string
-    error: boolean
+    isError: boolean
     elapsed: number
 }

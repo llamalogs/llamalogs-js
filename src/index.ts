@@ -80,18 +80,18 @@ class LlamaLogs {
 	private static processLog(params, returnParams = {}): ReturnLog {
 		const startTimestamp = Date.now()
 		const fullParams = {...returnParams, ...params}
-		const {sender, receiver, s, r, log, graphName, accountKey, error, initialMessage, startTime} = fullParams
+		const {sender, receiver, s, r, message, graphName, accountKey, isError, initialMessage, startTime} = fullParams
 		
 		if (!sender || !receiver) throw new Error('missing sender or receiver param')
 		if (!(graphName || globalGraphName)) throw new Error('missing graphName param')
 		if (!(accountKey || globalAccountKey)) throw new Error('missing accountKey param')
-		if (!(log || '').toString) throw new Error('log param must have toString method')
+		if (!(message || '').toString) throw new Error('log param must have toString method')
 		
-		const message: Log = {
+		const newMessage: Log = {
 			sender: (s || sender || 'emptySender').toString(),
 			receiver: (r || receiver || 'emptyReceiver').toString(),
-			log: (log || '').toString(),
-			error: (error && true) || false,
+			message: (message || '').toString(),
+			isError: (isError && true) || false,
 
 			timestamp: startTimestamp,
 			initialMessage: true,
@@ -101,21 +101,21 @@ class LlamaLogs {
 		}
 
 		if (initialMessage !== undefined) {
-			message.initialMessage = initialMessage
+			newMessage.initialMessage = initialMessage
 		}
 		if (startTime !== undefined) {
-			message.elapsed = startTimestamp - startTime
+			newMessage.elapsed = startTimestamp - startTime
 		}
 
-		LogAggregator.addMessage(message)
+		LogAggregator.addMessage(newMessage)
 
 		const returnData: ReturnLog = {
 			sender: receiver,
 			receiver: sender,
 			initialMessage: false,
 			startTime: startTimestamp,
-			accountKey: message.account,
-			graphName: message.graph
+			accountKey: newMessage.account,
+			graphName: newMessage.graph
 		}
 
 		return returnData
