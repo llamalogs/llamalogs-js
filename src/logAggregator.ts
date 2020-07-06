@@ -1,6 +1,7 @@
 import LlamaProxy from './llamaProxy'
 import Log from './interfaces/log.interface'
 import Stat from './interfaces/stat.interface'
+import {LlamaLogs} from './index'
 
 let aggregateLogs = {}
 let aggregateStats = {}
@@ -18,7 +19,9 @@ export default class LogAggregator {
 	static addTime() {
 		if(timeoutClear) {
 			// if its time to resend, 5 sec added on end
-			const defaultOneMinPoll = 54500
+			// using shorter period if in dev
+			const defaultOneMinPoll = LlamaLogs.isDevEnv ? 5000 : 54500
+
 			if (lastSendTime < Date.now() - defaultOneMinPoll) return
 			clearTimeout(timeoutClear)
 			LogAggregator.setNewTimeout()
@@ -33,14 +36,60 @@ export default class LogAggregator {
 			this.sendMessages()
 		}, 5000)
 	}
-    
-    static async sendMessages() {
+
+	static collectMessages() {
 		lastSendTime = Date.now()
         const currentAggLogs = aggregateLogs
         aggregateLogs = {}
         const currentAggStats = aggregateStats
-        aggregateStats = {}
-        await LlamaProxy.sendMessages(currentAggLogs, currentAggStats)
+		aggregateStats = {}
+		
+		const isDev = LlamaLogs.isDevEnv
+		if (isDev) console.log('sending messages')
+
+		// turning into array of aggregates
+		const logList = []
+		Object.keys(currentAggLogs).forEach(sender => {
+			Object.keys(currentAggLogs[sender]).forEach(receiver => {
+				logList.push({
+					sender, 
+					receiver,
+					count: currentAggLogs[sender][receiver].total,
+					errorCount: currentAggLogs[sender][receiver].errors,
+					message: currentAggLogs[sender][receiver].message,
+					errorMessage: currentAggLogs[sender][receiver].errorMessage,
+					graph: currentAggLogs[sender][receiver].graph || 'noGraph',
+					account: currentAggLogs[sender][receiver].account,
+					initialMessageCount: currentAggLogs[sender][receiver].initialMessageCount
+				})
+			})
+		})
+
+		if(isDev) {
+			console.log('messages')
+			console.log(logList)
+		}	
+
+		const statList = []
+		Object.keys(currentAggStats).forEach(component => {
+			Object.keys(currentAggStats[component]).forEach(name => {
+				const ob = currentAggStats[component][name]
+				ob.clientTimestamp = ob.timestamp
+				statList.push(ob)
+			})
+		})
+
+		if(isDev) {
+			console.log('stats')
+			console.log(statList)
+		}
+
+		return {logList, statList}
+	}
+    
+    static async sendMessages() {
+		const {logList, statList} =  LogAggregator.collectMessages()
+        await LlamaProxy.sendMessages(logList, statList)
     }
 
 	static addStat(message: Stat) {
@@ -112,6 +161,8 @@ export default class LogAggregator {
 		aggObj.total++
 		if (!aggObj.log && !message.isError) aggObj.message = message.message.toString()
 		if (!aggObj.errorLog && message.isError) aggObj.errorMessage = message.message.toString()
+
+		return aggregateLogs
 	}	
 
 	private static initAggregateObject(message: Log) {

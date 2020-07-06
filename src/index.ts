@@ -7,12 +7,17 @@ import Stat from './interfaces/stat.interface'
 let globalAccountKey: string = ''
 let globalGraphName: string = ''
 
-class LlamaLogs {
+export class LlamaLogs {
+	static isDevEnv: boolean = false;
+	static isDisabled: boolean = false;
+
 	static init(options) {
-		let {accountKey = '', graphName = ''} = options
+		let {accountKey = '', graphName = '', isDevEnv = false, disabled = false} = options
 		try {
 			globalAccountKey = accountKey.toString()
 			globalGraphName = graphName.toString()
+			LlamaLogs.isDevEnv = isDevEnv
+			LlamaLogs.isDisabled = disabled
 		} catch (e) {
 			console.error(`LlamaLogs Error: Init function; ${e}`)
 		}
@@ -20,6 +25,7 @@ class LlamaLogs {
 
 	static pointStat(params) {
 		try {
+			if (LlamaLogs.isDisabled) return
 			LlamaLogs.stat({...params, type: 'point'})
 		} catch (e) {
 			console.error(`LlamaLogs Error: pointStat function; ${e}`)
@@ -28,6 +34,7 @@ class LlamaLogs {
 
 	static avgStat(params) {
 		try {
+			if (LlamaLogs.isDisabled) return
 			LlamaLogs.stat({...params, type: 'average'})
 		} catch (e) {
 			console.error(`LlamaLogs Error: avgStat function; ${e}`)
@@ -36,6 +43,7 @@ class LlamaLogs {
 
 	static maxStat(params) {
 		try {
+			if (LlamaLogs.isDisabled) return
 			LlamaLogs.stat({...params, type: 'max'})
 		} catch (e) {
 			console.error(`LlamaLogs Error: maxStat function; ${e}`)
@@ -44,6 +52,7 @@ class LlamaLogs {
 	
 	static log(params, returnParams = {}) {
 		try {
+			if (LlamaLogs.isDisabled) return
 			LlamaLogs.processLog(params, returnParams)
 		} catch (e) {
 			console.error(`LlamaLogs Error: Log function; ${e}`)
@@ -52,6 +61,7 @@ class LlamaLogs {
 	
 	static async forceSend() {
 		try {
+			if (LlamaLogs.isDisabled) return
 			await LogAggregator.sendMessages()
 		} catch (e) {
 			console.error(`LlamaLogs Error: forceSend function; ${e}`)
@@ -81,7 +91,7 @@ class LlamaLogs {
 		const startTimestamp = Date.now()
 		const fullParams = {...returnParams, ...params}
 		const {sender, receiver, s, r, message, graphName, accountKey, isError, initialMessage, startTime} = fullParams
-		
+
 		if (!sender || !receiver) throw new Error('missing sender or receiver param')
 		if (!(graphName || globalGraphName)) throw new Error('missing graphName param')
 		if (!(accountKey || globalAccountKey)) throw new Error('missing accountKey param')
@@ -121,5 +131,3 @@ class LlamaLogs {
 		return returnData
 	}
 }
-
-export {LlamaLogs, LlamaLogs as LLL}
