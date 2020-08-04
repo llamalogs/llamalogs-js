@@ -23,10 +23,17 @@ export default class LogAggregator {
 			const defaultOneMinPoll = LlamaLogs.isDevEnv ? 5000 : 54500
 
 			if (lastSendTime < Date.now() - defaultOneMinPoll) return
-			clearTimeout(timeoutClear)
+			LogAggregator.clearTime()
 			LogAggregator.setNewTimeout()
 		} else {
 			LogAggregator.setNewTimeout()
+		}
+	}
+
+	static clearTime() {
+		if (timeoutClear !== null) {
+			clearTimeout(timeoutClear)
+			timeoutClear = null
 		}
 	}
 
@@ -38,7 +45,6 @@ export default class LogAggregator {
 	}
 
 	static collectMessages() {
-		lastSendTime = Date.now()
         const currentAggLogs = aggregateLogs
         aggregateLogs = {}
         const currentAggStats = aggregateStats
@@ -89,7 +95,8 @@ export default class LogAggregator {
     
     static async sendMessages() {
 		const {logList, statList} =  LogAggregator.collectMessages()
-        await LlamaProxy.sendMessages(logList, statList)
+		await LlamaProxy.sendMessages(logList, statList)
+		lastSendTime = Date.now()
     }
 
 	static addStat(message: Stat) {

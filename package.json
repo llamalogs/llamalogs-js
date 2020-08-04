@@ -30,6 +30,6 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "bent": "^7.1.0"
+    "needle": "^2.5.0"
   }
 }

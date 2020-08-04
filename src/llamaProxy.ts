@@ -1,4 +1,4 @@
-const bent = require('bent')
+const needle = require('needle')
 import {LlamaLogs} from './index'
 
 export default class LlamaProxy {
@@ -10,11 +10,20 @@ export default class LlamaProxy {
 
 			const isDev = LlamaLogs.isDevEnv
 			const url = isDev ? 'http://localhost:4000/' : 'https://llamalogs.com/'
-			
-			const post = bent(url, 'POST', 'json', 200);
-			try {
-				await post('api/v0/timedata', {account_key, time_logs: logList, time_stats: statList})
-				if(isDev) { console.log('send data') }
+
+			try { 
+				await new Promise((resolve, reject) => {
+					needle.post(
+						`${url}api/v0/timedata`, 
+						{account_key, time_logs: logList, time_stats: statList}, 
+						{ open_timeout: 1000, response_timeout: 5000 }, 
+						function(err, resp, body) {
+							if (err) reject()
+							if(isDev) { console.log('send data') }
+							resolve()
+						}
+					)
+				})
 			} catch (e) {
 				console.log(`LlamaLogs Error; contacting llama logs server; ${e}`)
 			}

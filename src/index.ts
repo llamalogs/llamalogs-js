@@ -62,6 +62,7 @@ export class LlamaLogs {
 	static async forceSend() {
 		try {
 			if (LlamaLogs.isDisabled) return
+			LogAggregator.clearTime()
 			await LogAggregator.sendMessages()
 		} catch (e) {
 			console.error(`LlamaLogs Error: forceSend function; ${e}`)
