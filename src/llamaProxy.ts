@@ -10,13 +10,15 @@ export default class LlamaProxy {
 
 			const isDev = LlamaLogs.isDevEnv
 			const url = isDev ? 'http://localhost:4000/' : 'https://llamalogs.com/'
+			console.log("loglist in needle")
+			console.log(logList)
 
 			try { 
 				await new Promise((resolve, reject) => {
 					needle.post(
 						`${url}api/v0/timedata`, 
 						{account_key, time_logs: logList, time_stats: statList}, 
-						{ open_timeout: 1000, response_timeout: 5000 }, 
+						{ open_timeout: 1000, response_timeout: 5000, json: true }, 
 						function(err, resp, body) {
 							if (err) reject()
 							if(isDev) { console.log('send data') }
