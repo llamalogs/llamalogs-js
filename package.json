@@ -1,6 +1,6 @@
 {
   "name": "llamalogs",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "",
   "homepage": "https://llamalogs.com",
   "license": "MIT",
@@ -31,6 +31,6 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "needle": "^2.5.0"
+    "axios": "^0.19.2"
   }
 }

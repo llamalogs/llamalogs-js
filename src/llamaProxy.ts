@@ -1,4 +1,4 @@
-const needle = require('needle')
+const axios = require('axios').default;
 import {LlamaLogs} from './index'
 
 export default class LlamaProxy {
@@ -12,22 +12,20 @@ export default class LlamaProxy {
 			const url = isDev ? 'http://localhost:4000/' : 'https://llamalogs.com/'
 
 			if (isDev) {
-				console.log("loglist in needle")
+				console.log("loglist")
 				console.log(logList)
 			}
 
 			try { 
 				await new Promise((resolve, reject) => {
-					needle.post(
-						`${url}api/v0/timedata`, 
-						{account_key, time_logs: logList, time_stats: statList}, 
-						{ json: true }, 
-						function(err, resp, body) {
-							if (err) reject()
-							if(isDev) { console.log('send data') }
-							resolve()
-						}
-					)
+					axios({
+						method: 'post',
+						timeout: 5000,
+						url: `${url}api/v0/timedata`,
+						data: {account_key, time_logs: logList, time_stats: statList}
+					  })
+					  .then(() => resolve())
+					  .catch((e) => reject(e))
 				})
 			} catch (e) {
 				console.log(`LlamaLogs Error; contacting llama logs server; ${e}`)
