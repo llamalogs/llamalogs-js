@@ -21,7 +21,7 @@ export default class LlamaProxy {
 					needle.post(
 						`${url}api/v0/timedata`, 
 						{account_key, time_logs: logList, time_stats: statList}, 
-						{ open_timeout: 2000, response_timeout: 5000, json: true }, 
+						{ open_timeout: 5000, response_timeout: 5000, json: true }, 
 						function(err, resp, body) {
 							if (err) reject()
 							if(isDev) { console.log('send data') }
