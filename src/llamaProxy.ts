@@ -10,8 +10,11 @@ export default class LlamaProxy {
 
 			const isDev = LlamaLogs.isDevEnv
 			const url = isDev ? 'http://localhost:4000/' : 'https://llamalogs.com/'
-			console.log("loglist in needle")
-			console.log(logList)
+
+			if (isDev) {
+				console.log("loglist in needle")
+				console.log(logList)
+			}
 
 			try { 
 				await new Promise((resolve, reject) => {
